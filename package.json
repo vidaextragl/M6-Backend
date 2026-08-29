@@ -13,7 +13,10 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "migrate:up": "node-pg-migrate up -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\"",
+    "migrate:down": "node-pg-migrate down -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\"",
+    "migrate:create": "node-pg-migrate create -j ts --migration-filename-format index -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\""
   },
   "keywords": [],
   "author": "",
@@ -21,13 +24,16 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.4.0",
+    "@types/pg": "^8.23.1",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",
