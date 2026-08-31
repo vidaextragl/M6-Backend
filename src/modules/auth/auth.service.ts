@@ -4,23 +4,16 @@ import { env } from '../../config';
 import { withTransaction } from '../../database';
 import { ConflictError, UnauthorizedError } from '../../shared/errors';
 import { createInitialBalances } from '../balances';
-import { createUser, findUserByEmail } from '../users';
-import type { UserRecord } from '../users';
+// Import directo a los archivos (no al barrel '../users'): users/index re-exporta users.routes,
+// que importa authMiddleware de este mismo módulo — pasar por el barrel crearía un ciclo.
+import { createUser, findUserByEmail } from '../users/users.repository';
+import { toUserResponse } from '../users/users.service';
 import { createWallet } from '../wallets';
 import type { JwtPayload, LoginDTO, RegisterDTO } from './auth.types';
 import { comparePassword, hashPassword } from './password.utils';
 
 function generateToken(payload: JwtPayload): string {
   return jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn } as jwt.SignOptions);
-}
-
-function toUserResponse(user: UserRecord) {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    createdAt: user.created_at.toISOString(),
-  };
 }
 
 export async function register(dto: RegisterDTO) {
