@@ -1,1 +1,1 @@
-export { pool } from './client';
+export { pool, withTransaction } from './client';
