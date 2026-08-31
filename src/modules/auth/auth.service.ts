@@ -27,7 +27,7 @@ export async function register(dto: RegisterDTO) {
       return createdUser;
     } catch (err) {
       if ((err as { code?: string }).code === '23505') {
-        throw new ConflictError('Email already registered');
+        throw new ConflictError('Email already registered', 'EMAIL_ALREADY_REGISTERED');
       }
       throw err;
     }
@@ -40,12 +40,12 @@ export async function register(dto: RegisterDTO) {
 export async function login(dto: LoginDTO) {
   const user = await findUserByEmail(dto.email);
   if (!user) {
-    throw new UnauthorizedError('Invalid credentials');
+    throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
   }
 
   const isValid = await comparePassword(dto.password, user.password_hash);
   if (!isValid) {
-    throw new UnauthorizedError('Invalid credentials');
+    throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
   }
 
   const token = generateToken({ userId: user.id });

@@ -5,7 +5,9 @@ export function validateSchema(schema: ZodType) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      res.status(400).json({ error: 'Validation failed', details: result.error.issues });
+      res
+        .status(400)
+        .json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: result.error.issues });
       return;
     }
 

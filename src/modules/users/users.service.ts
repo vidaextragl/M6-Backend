@@ -15,7 +15,7 @@ export function toUserResponse(user: UserRecord) {
 export async function getProfile(userId: string) {
   const user = await findUserById(userId);
   if (!user) {
-    throw new NotFoundError('User not found');
+    throw new NotFoundError('User not found', 'USER_NOT_FOUND');
   }
   return toUserResponse(user);
 }

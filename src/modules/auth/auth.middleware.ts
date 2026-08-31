@@ -8,7 +8,7 @@ import type { JwtPayload } from './auth.types';
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;
   if (!header?.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Missing authentication token');
+    throw new UnauthorizedError('Missing authentication token', 'MISSING_TOKEN');
   }
 
   const token = header.slice('Bearer '.length);
@@ -16,7 +16,10 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
   try {
     req.user = jwt.verify(token, env.jwtSecret) as JwtPayload;
     next();
-  } catch {
-    throw new UnauthorizedError('Invalid or expired token');
+  } catch (err) {
+    if (err instanceof jwt.TokenExpiredError) {
+      throw new UnauthorizedError('Token expired', 'TOKEN_EXPIRED');
+    }
+    throw new UnauthorizedError('Invalid token', 'INVALID_TOKEN');
   }
 }
