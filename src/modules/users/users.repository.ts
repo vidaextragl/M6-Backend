@@ -6,11 +6,12 @@ import type { UserRecord } from './users.types';
 export async function createUser(
   client: PoolClient,
   email: string,
+  name: string,
   passwordHash: string,
 ): Promise<UserRecord> {
   const result = await client.query<UserRecord>(
-    'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING *',
-    [email, passwordHash],
+    'INSERT INTO users (email, name, password_hash) VALUES ($1, $2, $3) RETURNING *',
+    [email, name, passwordHash],
   );
   return result.rows[0];
 }
