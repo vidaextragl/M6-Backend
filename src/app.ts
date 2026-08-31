@@ -4,6 +4,7 @@ import express from 'express';
 import { errorHandlerMiddleware } from './middlewares';
 import { authRoutes } from './modules/auth';
 import { usersRoutes } from './modules/users';
+import { currenciesRoutes, walletRoutes } from './modules/wallets';
 
 export const app = express();
 
@@ -16,6 +17,8 @@ app.get('/health', (_req, res) => {
 
 app.use('/auth', authRoutes);
 app.use('/users', usersRoutes);
+app.use('/wallet', walletRoutes);
+app.use('/currencies', currenciesRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });

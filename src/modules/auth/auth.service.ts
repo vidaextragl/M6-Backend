@@ -3,12 +3,13 @@ import jwt from 'jsonwebtoken';
 import { env } from '../../config';
 import { withTransaction } from '../../database';
 import { ConflictError, UnauthorizedError } from '../../shared/errors';
-import { createInitialBalances } from '../balances';
-// Import directo a los archivos (no al barrel '../users'): users/index re-exporta users.routes,
-// que importa authMiddleware de este mismo módulo — pasar por el barrel crearía un ciclo.
+// Import directo a los archivos (no a los barrels '../balances', '../users', '../wallets'):
+// esos módulos re-exportan sus *.routes.ts, que importan authMiddleware de este mismo módulo —
+// pasar por los barrels crearía un ciclo de imports.
+import { createInitialBalances } from '../balances/balances.repository';
 import { createUser, findUserByEmail } from '../users/users.repository';
 import { toUserResponse } from '../users/users.service';
-import { createWallet } from '../wallets';
+import { createWallet } from '../wallets/wallets.repository';
 import type { JwtPayload, LoginDTO, RegisterDTO } from './auth.types';
 import { comparePassword, hashPassword } from './password.utils';
 
