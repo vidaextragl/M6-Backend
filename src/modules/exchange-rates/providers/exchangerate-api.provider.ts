@@ -1,4 +1,5 @@
 import { env } from '../../../config';
+import { fetchWithTimeout } from './fetch-with-timeout';
 import type { ExchangeRateProvider } from './exchange-rate-provider.interface';
 
 interface ExchangeRateApiResponse {
@@ -10,7 +11,7 @@ interface ExchangeRateApiResponse {
 export const exchangeRateApiProvider: ExchangeRateProvider = {
   name: 'exchangerate-api',
   async getRate(from, to) {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://v6.exchangerate-api.com/v6/${env.exchangeRateApiKey}/pair/${from}/${to}`,
     );
     if (!res.ok) {

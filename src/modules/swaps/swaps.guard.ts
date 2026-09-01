@@ -1,7 +1,8 @@
 import { getExchangeRate } from '../exchange-rates/exchange-rates.service';
 
-// Reusa exchange-rates.service: si no hay cotización en vivo ni una guardada de menos de 1h,
-// tira ExchangeRateUnavailableError y el swap queda bloqueado automáticamente.
-export function ensureLiveRate(from: string, to: string) {
+// Reusa exchange-rates.service: acepta una tasa en vivo, en caché, o guardada hace menos de 1h.
+// Si no hay ninguna utilizable, tira ExchangeRateUnavailableError y el swap queda bloqueado.
+// (No se llama "ensureLiveRate": el nombre prometía más "en vivo" de lo que a veces entrega.)
+export function getUsableRate(from: string, to: string) {
   return getExchangeRate(from, to);
 }

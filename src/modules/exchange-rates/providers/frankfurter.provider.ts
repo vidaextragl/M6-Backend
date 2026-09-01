@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from './fetch-with-timeout';
 import type { ExchangeRateProvider } from './exchange-rate-provider.interface';
 
 interface FrankfurterResponse {
@@ -7,7 +8,9 @@ interface FrankfurterResponse {
 export const frankfurterProvider: ExchangeRateProvider = {
   name: 'frankfurter',
   async getRate(from, to) {
-    const res = await fetch(`https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`);
+    const res = await fetchWithTimeout(
+      `https://api.frankfurter.app/latest?amount=1&from=${from}&to=${to}`,
+    );
     if (!res.ok) {
       throw new Error(`Frankfurter responded with status ${res.status}`);
     }
