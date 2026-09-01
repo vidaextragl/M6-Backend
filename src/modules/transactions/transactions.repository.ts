@@ -9,8 +9,8 @@ export async function createTransaction(
 ): Promise<TransactionRecord> {
   const result = await client.query<TransactionRecord>(
     `INSERT INTO transactions
-      (wallet_id, transaction_type, from_currency, to_currency, amount_sent, amount_received, status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
+      (wallet_id, transaction_type, from_currency, to_currency, amount_sent, amount_received, exchange_rate, status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING *`,
     [
       input.walletId,
@@ -19,6 +19,7 @@ export async function createTransaction(
       input.toCurrency ?? null,
       input.amountSent ?? null,
       input.amountReceived ?? null,
+      input.exchangeRate ?? null,
       input.status,
     ],
   );
