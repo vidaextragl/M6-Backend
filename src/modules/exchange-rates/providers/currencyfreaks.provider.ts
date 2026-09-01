@@ -16,6 +16,7 @@ async function fetchUsdRate(currency: string): Promise<number> {
 
   const res = await fetchWithTimeout(
     `https://api.currencyfreaks.com/v2.0/rates/latest?apikey=${env.currencyFreaksApiKey}&symbols=${currency}`,
+    3000,
   );
   if (!res.ok) {
     throw new Error(`CurrencyFreaks responded with status ${res.status}`);

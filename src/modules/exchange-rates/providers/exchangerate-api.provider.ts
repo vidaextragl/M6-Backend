@@ -13,6 +13,7 @@ export const exchangeRateApiProvider: ExchangeRateProvider = {
   async getRate(from, to) {
     const res = await fetchWithTimeout(
       `https://v6.exchangerate-api.com/v6/${env.exchangeRateApiKey}/pair/${from}/${to}`,
+      3000,
     );
     if (!res.ok) {
       throw new Error(`ExchangeRate-API responded with status ${res.status}`);
