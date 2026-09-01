@@ -32,3 +32,13 @@ export interface CreateTransactionInput {
   amountSent?: string;
   amountReceived?: string;
 }
+
+export interface ListTransactionsFilters {
+  type?: TransactionType;
+  currency?: string;
+  status?: TransactionStatus;
+  from?: string;
+  to?: string;
+  limit: number;
+  offset: number;
+}
