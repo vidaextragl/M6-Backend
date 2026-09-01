@@ -31,6 +31,7 @@ export interface CreateTransactionInput {
   toCurrency?: string;
   amountSent?: string;
   amountReceived?: string;
+  exchangeRate?: number;
 }
 
 export interface ListTransactionsFilters {

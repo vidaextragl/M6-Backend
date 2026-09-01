@@ -11,6 +11,12 @@ export interface LedgerResult {
   balance: BalanceRecord;
 }
 
+export interface SwapLedgerResult {
+  transaction: TransactionRecord;
+  fromBalance: BalanceRecord;
+  toBalance: BalanceRecord;
+}
+
 export async function recordDeposit(
   client: PoolClient,
   walletId: string,
@@ -50,4 +56,34 @@ export async function recordWithdrawal(
   });
 
   return { transaction, balance };
+}
+
+export async function recordSwap(
+  client: PoolClient,
+  walletId: string,
+  fromCurrency: string,
+  toCurrency: string,
+  amountSent: string,
+  amountReceived: string,
+  exchangeRate: number,
+): Promise<SwapLedgerResult> {
+  const fromBalance = await withdrawBalance(client, walletId, fromCurrency, amountSent);
+  if (!fromBalance) {
+    throw new InsufficientFundsError(`Insufficient ${fromCurrency} balance`);
+  }
+
+  const toBalance = await depositBalance(client, walletId, toCurrency, amountReceived);
+
+  const transaction = await createTransaction(client, {
+    walletId,
+    transactionType: 'SWAP',
+    fromCurrency,
+    toCurrency,
+    amountSent,
+    amountReceived,
+    exchangeRate,
+    status: 'COMPLETED',
+  });
+
+  return { transaction, fromBalance, toBalance };
 }
