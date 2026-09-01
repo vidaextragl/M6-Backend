@@ -37,8 +37,8 @@ export interface ListTransactionsFilters {
   type?: TransactionType;
   currency?: string;
   status?: TransactionStatus;
-  from?: string;
-  to?: string;
+  from?: Date;
+  to?: Date;
   limit: number;
   offset: number;
 }

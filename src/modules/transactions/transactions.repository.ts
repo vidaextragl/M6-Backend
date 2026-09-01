@@ -68,7 +68,7 @@ export async function findTransactionsByWallet(
     `SELECT *, COUNT(*) OVER() AS total_count
      FROM transactions
      WHERE ${whereClause}
-     ORDER BY created_at DESC
+     ORDER BY created_at DESC, id DESC
      LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
     values,
   );
