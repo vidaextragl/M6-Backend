@@ -1,2 +1,2 @@
 export { errorHandlerMiddleware } from './error-handler.middleware';
-export { validateSchema } from './validate-schema.middleware';
+export { validateQuery, validateSchema } from './validate-schema.middleware';

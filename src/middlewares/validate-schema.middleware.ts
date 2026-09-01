@@ -15,3 +15,18 @@ export function validateSchema(schema: ZodType) {
     next();
   };
 }
+
+export function validateQuery(schema: ZodType) {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      res
+        .status(400)
+        .json({ error: 'Validation failed', code: 'VALIDATION_ERROR', details: result.error.issues });
+      return;
+    }
+
+    req.validatedQuery = result.data;
+    next();
+  };
+}
