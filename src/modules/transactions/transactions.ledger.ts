@@ -87,3 +87,44 @@ export async function recordSwap(
 
   return { transaction, fromBalance, toBalance };
 }
+
+export async function recordBuy(
+  client: PoolClient,
+  walletId: string,
+  currency: string,
+  amount: string,
+): Promise<LedgerResult> {
+  const balance = await withdrawBalance(client, walletId, currency, amount);
+  if (!balance) {
+    throw new InsufficientFundsError(`Insufficient ${currency} balance`);
+  }
+
+  const transaction = await createTransaction(client, {
+    walletId,
+    transactionType: 'BUY',
+    fromCurrency: currency,
+    amountSent: amount,
+    status: 'COMPLETED',
+  });
+
+  return { transaction, balance };
+}
+
+export async function recordCashback(
+  client: PoolClient,
+  walletId: string,
+  currency: string,
+  amount: string,
+): Promise<LedgerResult> {
+  const balance = await depositBalance(client, walletId, currency, amount);
+
+  const transaction = await createTransaction(client, {
+    walletId,
+    transactionType: 'REWARD_CASHBACK',
+    toCurrency: currency,
+    amountReceived: amount,
+    status: 'COMPLETED',
+  });
+
+  return { transaction, balance };
+}
