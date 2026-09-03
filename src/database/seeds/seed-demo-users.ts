@@ -3,7 +3,11 @@ import 'dotenv/config';
 import { pool, withTransaction } from '../client';
 import { hashPassword } from '../../modules/auth/password.utils';
 import { createInitialBalances, depositBalance } from '../../modules/balances/balances.repository';
-import { recordDeposit, recordSwap, recordWithdrawal } from '../../modules/transactions/transactions.ledger';
+import {
+  recordDeposit,
+  recordSwap,
+  recordWithdrawal,
+} from '../../modules/transactions/transactions.ledger';
 import { createUser, findUserByEmail } from '../../modules/users/users.repository';
 import { createWallet } from '../../modules/wallets/wallets.repository';
 
@@ -13,7 +17,9 @@ interface DemoUser {
   password: string;
 }
 
-const DEMO_USERS: DemoUser[] = [{ email: 'demo@vidaextra.com', name: 'Usuario Demo', password: 'Demo12345' }];
+const DEMO_USERS: DemoUser[] = [
+  { email: 'demo@vidaextra.com', name: 'Usuario Demo', password: '#Demo13579' },
+];
 
 async function seedUser(demo: DemoUser): Promise<void> {
   const existing = await findUserByEmail(demo.email);
@@ -39,7 +45,9 @@ async function seedUser(demo: DemoUser): Promise<void> {
   // Movimientos reales, para que el historial de transacciones tenga algo que mostrar en la demo.
   await withTransaction((client) => recordDeposit(client, walletId, 'USD', '200.00'));
   await withTransaction((client) => recordWithdrawal(client, walletId, 'USD', '50.00'));
-  await withTransaction((client) => recordSwap(client, walletId, 'USD', 'ARS', '150.00', '225000.00', 1500));
+  await withTransaction((client) =>
+    recordSwap(client, walletId, 'USD', 'ARS', '150.00', '225000.00', 1500),
+  );
 
   console.log(`Usuario demo creado: ${demo.email} / ${demo.password}`);
 }
