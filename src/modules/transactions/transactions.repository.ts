@@ -1,7 +1,12 @@
 import type { PoolClient } from 'pg';
 
 import { pool } from '../../database';
-import type { CreateTransactionInput, ListTransactionsFilters, TransactionRecord } from './transactions.types';
+import type {
+  CreateTransactionInput,
+  ListTransactionsFilters,
+  TransactionRecord,
+  TransactionType,
+} from './transactions.types';
 
 export async function createTransaction(
   client: PoolClient,
@@ -78,4 +83,52 @@ export async function findTransactionsByWallet(
   const transactions = result.rows.map(({ total_count: _totalCount, ...rest }) => rest);
 
   return { transactions, total };
+}
+
+// Reconstruye "cuánto había de cada moneda" en un momento pasado sumando/restando los movimientos
+// reales ocurridos desde entonces — no hay una tabla de snapshots históricos, así que se calcula
+// a partir del ledger de transacciones (fuente de verdad) en vez de inventar el dato.
+export async function getNetChangeByCurrencySince(
+  walletId: string,
+  since: Date,
+): Promise<Record<string, number>> {
+  const result = await pool.query<{ currency: string; net: string }>(
+    `SELECT currency, SUM(delta) AS net FROM (
+       SELECT to_currency AS currency, amount_received AS delta
+         FROM transactions
+        WHERE wallet_id = $1 AND created_at >= $2 AND status = 'COMPLETED' AND to_currency IS NOT NULL
+       UNION ALL
+       SELECT from_currency AS currency, -amount_sent AS delta
+         FROM transactions
+        WHERE wallet_id = $1 AND created_at >= $2 AND status = 'COMPLETED' AND from_currency IS NOT NULL
+     ) net_changes
+     GROUP BY currency`,
+    [walletId, since],
+  );
+
+  return Object.fromEntries(result.rows.map((row) => [row.currency, Number(row.net)]));
+}
+
+export async function sumTransactionAmountsByCurrency(
+  walletId: string,
+  type: TransactionType,
+  since?: Date,
+): Promise<Record<string, number>> {
+  const values: unknown[] = [walletId, type];
+  let whereClause = "wallet_id = $1 AND transaction_type = $2 AND status = 'COMPLETED'";
+
+  if (since) {
+    values.push(since);
+    whereClause += ` AND created_at >= $${values.length}`;
+  }
+
+  const result = await pool.query<{ to_currency: string; total: string }>(
+    `SELECT to_currency, SUM(amount_received) AS total
+     FROM transactions
+     WHERE ${whereClause}
+     GROUP BY to_currency`,
+    values,
+  );
+
+  return Object.fromEntries(result.rows.map((row) => [row.to_currency, Number(row.total)]));
 }

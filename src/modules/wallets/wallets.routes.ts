@@ -6,6 +6,7 @@ import {
   depositController,
   getCurrenciesController,
   getWalletController,
+  getWalletSummaryController,
   withdrawController,
 } from './wallets.controller';
 import { depositWithdrawSchema } from './wallets.validation';
@@ -13,6 +14,7 @@ import { depositWithdrawSchema } from './wallets.validation';
 export const walletRoutes = Router();
 
 walletRoutes.get('/', authMiddleware, getWalletController);
+walletRoutes.get('/summary', authMiddleware, getWalletSummaryController);
 walletRoutes.post(
   '/deposit',
   authMiddleware,

@@ -8,6 +8,11 @@ export async function getWalletController(req: Request, res: Response): Promise<
   res.status(200).json({ wallet });
 }
 
+export async function getWalletSummaryController(req: Request, res: Response): Promise<void> {
+  const summary = await walletsService.getWalletSummary(req.user!.userId);
+  res.status(200).json(summary);
+}
+
 export async function depositController(req: Request, res: Response): Promise<void> {
   const { currency, amount } = req.body;
   const result = await walletsService.deposit(req.user!.userId, currency, amount);
