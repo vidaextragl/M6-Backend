@@ -1,7 +1,11 @@
 import { withTransaction } from '../../database';
 import { AppError, NotFoundError } from '../../shared/errors';
 import { toBalanceResponse } from '../balances/balances.service';
-import { recordSwap } from '../transactions/transactions.ledger';
+// Import directo (no al barrel '../rewards'): rewards/index re-exporta rewards.routes, que
+// importa authMiddleware de auth — mismo cuidado de ciclo que en el resto del proyecto.
+import { calculateCashback } from '../rewards/cashback.calculator';
+import { createRewardEntry } from '../rewards/rewards.repository';
+import { recordBuy, recordCashback, recordSwap } from '../transactions/transactions.ledger';
 import { toTransactionResponse } from '../transactions/transactions.service';
 import { findWalletByUserId } from '../wallets/wallets.repository';
 import { getUsableRate } from './swaps.guard';
@@ -44,5 +48,38 @@ export async function swap(
     fromBalance: toBalanceResponse(fromBalance),
     toBalance: toBalanceResponse(toBalance),
     rate,
+  };
+}
+
+export async function buy(userId: string, currency: string, amount: string) {
+  const wallet = await findWalletByUserId(userId);
+  if (!wallet) {
+    throw new NotFoundError('Wallet not found', 'WALLET_NOT_FOUND');
+  }
+
+  const { cashbackAmount, points } = calculateCashback(amount);
+
+  const result = await withTransaction(async (client) => {
+    const purchase = await recordBuy(client, wallet.id, currency, amount);
+    const cashback = await recordCashback(client, wallet.id, currency, cashbackAmount);
+    const reward = await createRewardEntry(client, {
+      userId,
+      transactionId: cashback.transaction.id,
+      points,
+      source: 'CASHBACK',
+      description: `Cashback from purchase of ${amount} ${currency}`,
+    });
+
+    return { purchase, cashback, reward };
+  });
+
+  return {
+    purchase: toTransactionResponse(result.purchase.transaction),
+    cashback: {
+      transaction: toTransactionResponse(result.cashback.transaction),
+      amount: cashbackAmount,
+      points,
+    },
+    balance: toBalanceResponse(result.cashback.balance),
   };
 }
