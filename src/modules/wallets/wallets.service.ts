@@ -5,6 +5,7 @@ import { NotFoundError } from '../../shared/errors';
 import { recordDeposit, recordWithdrawal } from '../transactions/transactions.ledger';
 import { toTransactionResponse } from '../transactions/transactions.service';
 import { findWalletByUserId } from './wallets.repository';
+import { computeWalletSummary } from './wallets.summary';
 
 async function getWalletOrThrow(userId: string) {
   const wallet = await findWalletByUserId(userId);
@@ -42,4 +43,11 @@ export async function withdraw(userId: string, currency: string, amount: string)
   );
 
   return { transaction: toTransactionResponse(transaction), balance: toBalanceResponse(balance) };
+}
+
+export async function getWalletSummary(userId: string) {
+  const wallet = await getWalletOrThrow(userId);
+  const balances = await findBalancesByWallet(wallet.id);
+
+  return computeWalletSummary(wallet.id, balances);
 }

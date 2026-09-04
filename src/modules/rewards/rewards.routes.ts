@@ -2,7 +2,12 @@ import { Router } from 'express';
 
 import { authMiddleware } from '../auth';
 import { validateSchema } from '../../middlewares';
-import { getCashbackController, getRewardsController, redeemController } from './rewards.controller';
+import {
+  getCashbackController,
+  getCashbackSummaryController,
+  getRewardsController,
+  redeemController,
+} from './rewards.controller';
 import { redeemSchema } from './rewards.validation';
 
 export const rewardsRoutes = Router();
@@ -13,3 +18,4 @@ rewardsRoutes.post('/redeem', authMiddleware, validateSchema(redeemSchema), rede
 export const cashbackRoutes = Router();
 
 cashbackRoutes.get('/', authMiddleware, getCashbackController);
+cashbackRoutes.get('/summary', authMiddleware, getCashbackSummaryController);

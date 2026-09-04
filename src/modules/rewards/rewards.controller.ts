@@ -12,6 +12,11 @@ export async function getCashbackController(req: Request, res: Response): Promis
   res.status(200).json(result);
 }
 
+export async function getCashbackSummaryController(req: Request, res: Response): Promise<void> {
+  const result = await rewardsService.getCashbackDashboardSummary(req.user!.userId);
+  res.status(200).json(result);
+}
+
 export async function redeemController(req: Request, res: Response): Promise<void> {
   const { catalogItemId } = req.body;
   const result = await rewardsService.redeemReward(req.user!.userId, catalogItemId);
