@@ -3,6 +3,7 @@ import express from 'express';
 
 import { errorHandlerMiddleware } from './middlewares';
 import { authRoutes } from './modules/auth';
+import { chatbotRoutes } from './modules/chatbot';
 import { exchangeRatesRoutes } from './modules/exchange-rates';
 import { cashbackRoutes, rewardsRoutes } from './modules/rewards';
 import { swapsRoutes } from './modules/swaps';
@@ -28,6 +29,7 @@ app.use('/exchange-rates', exchangeRatesRoutes);
 app.use('/exchange', swapsRoutes);
 app.use('/rewards', rewardsRoutes);
 app.use('/cashback', cashbackRoutes);
+app.use('/chatbot', chatbotRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: 'Not found' });
