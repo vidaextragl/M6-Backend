@@ -1,6 +1,7 @@
 import { withTransaction } from '../../database';
 import { getExchangeRate } from '../exchange-rates';
 import { InsufficientPointsError, NotFoundError } from '../../shared/errors';
+import { sendRedemptionReceiptEmail } from '../notifications/email/receipts.service';
 // Imports directos (no al barrel '../transactions', '../wallets'): esos barrels re-exportan
 // rutas que dependen de authMiddleware, mismo cuidado de ciclo que en auth.service.ts.
 import {
@@ -144,6 +145,8 @@ export async function redeemReward(userId: string, catalogItemId: string) {
       description: `Redeemed: ${item.name}`,
     });
   });
+
+  void sendRedemptionReceiptEmail(userId, reward, item);
 
   return toRewardResponse(reward);
 }
