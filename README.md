@@ -128,11 +128,21 @@ header `Authorization: Bearer <token>`. Los errores tienen la forma `{ "error": 
 | GET    | `/transactions`     | Sí   | Historial paginado, filtrable por `type`, `currency`, `status`, `from`, `to`                                           |
 | GET    | `/exchange-rates`   | No   | Tasa de cambio entre `from` y `to` (query params)                                                                      |
 | POST   | `/exchange/swap`    | Sí   | Swap entre monedas (`fromCurrency`, `toCurrency`, `amountToReceive`) — dispara email de comprobante                    |
-| POST   | `/exchange/buy`     | Sí   | Compra (`currency`, `amount`), acredita cashback automático — dispara email de comprobante de la compra y del cashback |
+| POST   | `/exchange/buy`     | Sí   | Compra (`currency`, `amount`), acredita cashback automático (con topes) — dispara email de comprobante de la compra y del cashback |
 | GET    | `/rewards`          | Sí   | Puntos disponibles y catálogo de recompensas                                                                           |
 | POST   | `/rewards/redeem`   | Sí   | Canjea una recompensa (`catalogItemId`) — dispara email de comprobante                                                 |
 | GET    | `/cashback`         | Sí   | Historial de cashback                                                                                                  |
 | GET    | `/cashback/summary` | Sí   | Resumen mensual de cashback (meta, progreso)                                                                           |
+
+### 💸 Topes de cashback
+
+El cashback de `POST /exchange/buy` respeta 3 topes, todos en equivalente USD:
+máximo **$10 por transacción**, **$100 por semana** (lunes a domingo) y **$200 por mes** (calendario).
+La compra nunca se bloquea por esto — si algún tope ya se alcanzó, el cashback de esa compra
+puntual se recorta (hasta $0 si hace falta), y los puntos otorgados se recalculan sobre el monto ya
+recortado. Si no se puede convertir la moneda de la compra a USD (por ejemplo, caída simultánea de
+las 3 APIs de tasas de cambio), se aplica el criterio conservador de no acreditar cashback en esa
+compra, en vez de dejarlo pasar sin control (`src/modules/rewards/cashback.limits.ts`).
 
 ### 📧 Notificaciones por email
 

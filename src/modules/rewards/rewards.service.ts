@@ -1,5 +1,4 @@
 import { withTransaction } from '../../database';
-import { getExchangeRate } from '../exchange-rates';
 import { InsufficientPointsError, NotFoundError } from '../../shared/errors';
 import { sendRedemptionReceiptEmail } from '../notifications/email/receipts.service';
 // Imports directos (no al barrel '../transactions', '../wallets'): esos barrels re-exportan
@@ -10,6 +9,7 @@ import {
 } from '../transactions/transactions.repository';
 import { toTransactionResponse } from '../transactions/transactions.service';
 import { findWalletByUserId } from '../wallets/wallets.repository';
+import { sumByCurrencyToUsd } from './cashback.limits';
 import {
   createRewardEntry,
   findCatalogItemById,
@@ -24,27 +24,6 @@ const CASHBACK_HISTORY_LIMIT = 50;
 // Meta mensual de cashback: número fijo, no sale de ninguna fórmula (igual que el mock original
 // del frontend, que también lo tenía hardcodeado). Se puede volver configurable más adelante.
 const MONTHLY_CASHBACK_GOAL_USD = 100;
-
-async function sumByCurrencyToUsd(amountsByCurrency: Record<string, number>): Promise<number> {
-  let total = 0;
-
-  for (const [currency, amount] of Object.entries(amountsByCurrency)) {
-    if (currency === 'USD') {
-      total += amount;
-      continue;
-    }
-
-    try {
-      const { rate } = await getExchangeRate(currency, 'USD');
-      total += amount * rate;
-    } catch {
-      // Si no hay ninguna cotización disponible para esa moneda, se la deja afuera del total en
-      // vez de tirar abajo todo el resumen de cashback.
-    }
-  }
-
-  return total;
-}
 
 export function toCatalogItemResponse(item: RewardCatalogItemRecord) {
   return {
