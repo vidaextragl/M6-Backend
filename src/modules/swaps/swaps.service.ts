@@ -5,6 +5,7 @@ import { toBalanceResponse } from '../balances/balances.service';
 // importa authMiddleware de auth — mismo cuidado de ciclo que en el resto del proyecto.
 import { calculateCashback } from '../rewards/cashback.calculator';
 import { createRewardEntry } from '../rewards/rewards.repository';
+import { sendTransactionReceiptEmail } from '../notifications/email/receipts.service';
 import { recordBuy, recordCashback, recordSwap } from '../transactions/transactions.ledger';
 import { toTransactionResponse } from '../transactions/transactions.service';
 import { findWalletByUserId } from '../wallets/wallets.repository';
@@ -43,6 +44,8 @@ export async function swap(
     recordSwap(client, wallet.id, fromCurrency, toCurrency, amountSent, amountToReceive, rate),
   );
 
+  void sendTransactionReceiptEmail(userId, transaction);
+
   return {
     transaction: toTransactionResponse(transaction),
     fromBalance: toBalanceResponse(fromBalance),
@@ -72,6 +75,9 @@ export async function buy(userId: string, currency: string, amount: string) {
 
     return { purchase, cashback, reward };
   });
+
+  void sendTransactionReceiptEmail(userId, result.purchase.transaction);
+  void sendTransactionReceiptEmail(userId, result.cashback.transaction);
 
   return {
     purchase: toTransactionResponse(result.purchase.transaction),
