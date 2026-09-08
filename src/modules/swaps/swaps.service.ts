@@ -4,6 +4,7 @@ import { toBalanceResponse } from '../balances/balances.service';
 // Import directo (no al barrel '../rewards'): rewards/index re-exporta rewards.routes, que
 // importa authMiddleware de auth — mismo cuidado de ciclo que en el resto del proyecto.
 import { calculateCashback } from '../rewards/cashback.calculator';
+import { applyCashbackLimits } from '../rewards/cashback.limits';
 import { createRewardEntry } from '../rewards/rewards.repository';
 import { sendTransactionReceiptEmail } from '../notifications/email/receipts.service';
 import { recordBuy, recordCashback, recordSwap } from '../transactions/transactions.ledger';
@@ -60,7 +61,8 @@ export async function buy(userId: string, currency: string, amount: string) {
     throw new NotFoundError('Wallet not found', 'WALLET_NOT_FOUND');
   }
 
-  const { cashbackAmount, points } = calculateCashback(amount);
+  const rawCashback = calculateCashback(amount);
+  const { cashbackAmount, points } = await applyCashbackLimits(wallet.id, currency, rawCashback);
 
   const result = await withTransaction(async (client) => {
     const purchase = await recordBuy(client, wallet.id, currency, amount);
