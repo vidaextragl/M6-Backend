@@ -24,6 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-ses": "^3.1127.0",
+    "@google/genai": "^2.21.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
