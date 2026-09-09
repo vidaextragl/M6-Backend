@@ -17,7 +17,9 @@
     "migrate:up": "node-pg-migrate up -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\"",
     "migrate:down": "node-pg-migrate down -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\"",
     "migrate:create": "node-pg-migrate create -j ts --migration-filename-format index -m src/database/migrations --ignore-pattern \"^(\\..*|index\\.ts)$\"",
-    "seed:demo": "tsx src/database/seeds/seed-demo-users.ts"
+    "seed:demo": "tsx src/database/seeds/seed-demo-users.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -42,11 +44,14 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.4.0",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",
+    "supertest": "^7.2.2",
     "tsx": "^4.23.12",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.68.0"
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^5.0.0"
   }
 }
