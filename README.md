@@ -22,8 +22,9 @@ Proyecto Final del curso Full Stack de Henry. Backend developer: Ciro Castellaro
 - **Zod** para validación de esquemas
 - **AWS SES** (`@aws-sdk/client-ses`) para el envío de emails transaccionales
 - **Google Gemini** (`@google/genai`) para el chatbot con function calling
+- **Vitest** + **Supertest** para tests unitarios y de integración
 - **ESLint** + **Prettier** para linting y formateo
-- **GitHub Actions** para CI (lint + build)
+- **GitHub Actions** para CI (lint + build + tests)
 - Deploy en **Railway**
 
 ## 📦 Instalación
@@ -182,12 +183,30 @@ dinero, que ya quedó confirmada en la base de datos.
 
 ## 🧪 Pruebas
 
-La carpeta `tests/` está scaffoldeada (`unit/`, `integration/`, `mocks/`) pero **todavía no tiene
-tests implementados** ni Vitest agregado como dependencia. Queda pendiente: mínimo 10 tests entre
-unitarios e integración para la Demo Final.
+Suite de **Vitest** con 181 tests en 33 archivos, entre unitarios (`tests/unit/`, lógica pura o con
+dependencias mockeadas) y de integración (`tests/integration/`, HTTP real vía `supertest` contra una
+base de datos de Postgres real). Cubre exchange rates (caché, cascada de fallback, orquestación),
+swaps (redondeo, tope de tasa no disponible), transacciones (ledger, concurrencia real de retiros),
+wallet (depósito/retiro, resumen histórico), los 8 schemas de validación, y los endpoints de
+auth/users/rewards/chatbot/notificaciones — incluyendo el loop real de function calling del chatbot
+contra la DB (con Gemini mockeado) y los 3 topes de cashback probados de forma independiente entre sí.
 
-CI (`.github/workflows/ci.yml`) corre en cada push/PR a `main` y `develop`: `npm run lint` y
-`npm run build`.
+Las 3 APIs externas (tasas de cambio, AWS SES, Gemini) siempre van mockeadas — los tests nunca pegan
+contra internet ni generan costo real.
+
+```bash
+cp .env.test .env.test.local   # opcional: solo si tu Postgres local no usa postgres/postgres
+npm test                        # corre toda la suite una vez
+npm run test:watch              # modo watch
+```
+
+`tests/global-setup.ts` crea la base `vida_extra_test` (si no existe) y corre las migraciones reales
+antes de la suite — no hace falta prepararla a mano. `.env.test` trae valores dummy (se commitea, sin
+secretos reales); si tu Postgres local tiene otro usuario/password, override en `.env.test.local`
+(ignorado por git).
+
+CI (`.github/workflows/ci.yml`) corre en cada push/PR a `main` y `develop`: `npm run lint`,
+`npm run build`, y un job aparte `test` que levanta un Postgres de servicio y corre `npm test`.
 
 ## 🚢 Deployment
 
