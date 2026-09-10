@@ -1,11 +1,12 @@
 import { toBalanceResponse } from '../balances/balances.service';
 import { findBalancesByWallet } from '../balances/balances.repository';
 import { withTransaction } from '../../database';
-import { NotFoundError } from '../../shared/errors';
-// Import directo (no al barrel '../notifications'): mismo cuidado de ciclo que en el resto del
-// proyecto, aunque hoy notifications no dependa de rutas con authMiddleware.
+import { AppError, NotFoundError } from '../../shared/errors';
+// Imports directos (no a los barrels '../notifications', '../users'): mismo cuidado de ciclo que
+// en el resto del proyecto, aunque hoy ninguno de los dos dependa de rutas con authMiddleware.
 import { sendTransactionReceiptEmail } from '../notifications/email/receipts.service';
-import { recordDeposit, recordWithdrawal } from '../transactions/transactions.ledger';
+import { findUserByEmail } from '../users/users.repository';
+import { recordDeposit, recordTransfer, recordWithdrawal } from '../transactions/transactions.ledger';
 import { toTransactionResponse } from '../transactions/transactions.service';
 import { findWalletByUserId } from './wallets.repository';
 import { computeWalletSummary } from './wallets.summary';
@@ -52,6 +53,42 @@ export async function withdraw(userId: string, currency: string, amount: string)
   void sendTransactionReceiptEmail(userId, transaction);
 
   return { transaction: toTransactionResponse(transaction), balance: toBalanceResponse(balance) };
+}
+
+export async function transfer(
+  userId: string,
+  recipientEmail: string,
+  currency: string,
+  amount: string,
+) {
+  const senderWallet = await getWalletOrThrow(userId);
+
+  const recipient = await findUserByEmail(recipientEmail);
+  if (!recipient) {
+    throw new NotFoundError('Recipient not found', 'RECIPIENT_NOT_FOUND');
+  }
+  if (recipient.id === userId) {
+    throw new AppError(400, 'Cannot transfer to yourself', 'CANNOT_TRANSFER_TO_SELF');
+  }
+
+  // No se usa getWalletOrThrow acá: si el destinatario existe pero no tiene wallet, es un dato
+  // corrupto (todo registro crea la wallet automáticamente), no un 404 esperable de negocio.
+  const recipientWallet = await findWalletByUserId(recipient.id);
+  if (!recipientWallet) {
+    throw new NotFoundError('Recipient wallet not found', 'WALLET_NOT_FOUND');
+  }
+
+  const { senderTransaction, senderBalance, recipientTransaction } = await withTransaction((client) =>
+    recordTransfer(client, senderWallet.id, recipientWallet.id, currency, amount),
+  );
+
+  void sendTransactionReceiptEmail(userId, senderTransaction);
+  void sendTransactionReceiptEmail(recipient.id, recipientTransaction);
+
+  return {
+    transaction: toTransactionResponse(senderTransaction),
+    balance: toBalanceResponse(senderBalance),
+  };
 }
 
 export async function getWalletSummary(userId: string) {

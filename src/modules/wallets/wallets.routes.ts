@@ -7,9 +7,10 @@ import {
   getCurrenciesController,
   getWalletController,
   getWalletSummaryController,
+  transferController,
   withdrawController,
 } from './wallets.controller';
-import { depositWithdrawSchema } from './wallets.validation';
+import { depositWithdrawSchema, transferSchema } from './wallets.validation';
 
 export const walletRoutes = Router();
 
@@ -27,6 +28,7 @@ walletRoutes.post(
   validateSchema(depositWithdrawSchema),
   withdrawController,
 );
+walletRoutes.post('/transfer', authMiddleware, validateSchema(transferSchema), transferController);
 
 export const currenciesRoutes = Router();
 currenciesRoutes.get('/', getCurrenciesController);

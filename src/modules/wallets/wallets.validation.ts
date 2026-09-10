@@ -1,11 +1,15 @@
 import { z } from 'zod';
 
+import { amountSchema } from '../../shared/amount.schema';
 import { SUPPORTED_CURRENCIES } from '../../shared/constants';
 
 export const depositWithdrawSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES),
-  amount: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a positive number with up to 2 decimal places')
-    .refine((val) => Number(val) > 0, { message: 'Amount must be greater than 0' }),
+  amount: amountSchema,
+});
+
+export const transferSchema = z.object({
+  recipientEmail: z.email(),
+  currency: z.enum(SUPPORTED_CURRENCIES),
+  amount: amountSchema,
 });
