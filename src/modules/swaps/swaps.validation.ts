@@ -1,15 +1,13 @@
 import { z } from 'zod';
 
+import { amountSchema } from '../../shared/amount.schema';
 import { SUPPORTED_CURRENCIES } from '../../shared/constants';
 
 export const swapSchema = z
   .object({
     fromCurrency: z.enum(SUPPORTED_CURRENCIES),
     toCurrency: z.enum(SUPPORTED_CURRENCIES),
-    amountToReceive: z
-      .string()
-      .regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a positive number with up to 2 decimal places')
-      .refine((val) => Number(val) > 0, { message: 'Amount must be greater than 0' }),
+    amountToReceive: amountSchema,
   })
   .refine((data) => data.fromCurrency !== data.toCurrency, {
     message: '"fromCurrency" and "toCurrency" must be different',
@@ -18,8 +16,5 @@ export const swapSchema = z
 
 export const buySchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES),
-  amount: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, 'Amount must be a positive number with up to 2 decimal places')
-    .refine((val) => Number(val) > 0, { message: 'Amount must be greater than 0' }),
+  amount: amountSchema,
 });

@@ -26,4 +26,15 @@ describe('depositWithdrawSchema', () => {
   it('rejects an unsupported currency', () => {
     expect(depositWithdrawSchema.safeParse({ currency: 'XYZ', amount: '10.00' }).success).toBe(false);
   });
+
+  it('accepts an amount with exactly 16 integer digits (matches the decimal(18,2) column)', () => {
+    const amount = '9'.repeat(16);
+    expect(depositWithdrawSchema.safeParse({ currency: 'USD', amount }).success).toBe(true);
+  });
+
+  it('rejects an amount with more than 16 integer digits (would overflow the DB column)', () => {
+    const amount = '9'.repeat(17);
+    const result = depositWithdrawSchema.safeParse({ currency: 'USD', amount });
+    expect(result.success).toBe(false);
+  });
 });
