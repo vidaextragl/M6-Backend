@@ -25,6 +25,12 @@ export async function withdrawController(req: Request, res: Response): Promise<v
   res.status(201).json(result);
 }
 
+export async function transferController(req: Request, res: Response): Promise<void> {
+  const { recipientEmail, currency, amount } = req.body;
+  const result = await walletsService.transfer(req.user!.userId, recipientEmail, currency, amount);
+  res.status(201).json(result);
+}
+
 export function getCurrenciesController(_req: Request, res: Response): void {
   res.status(200).json({ currencies: SUPPORTED_CURRENCIES });
 }

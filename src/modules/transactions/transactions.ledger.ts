@@ -17,6 +17,12 @@ export interface SwapLedgerResult {
   toBalance: BalanceRecord;
 }
 
+export interface TransferLedgerResult {
+  senderTransaction: TransactionRecord;
+  senderBalance: BalanceRecord;
+  recipientTransaction: TransactionRecord;
+}
+
 export async function recordDeposit(
   client: PoolClient,
   walletId: string,
@@ -108,6 +114,45 @@ export async function recordBuy(
   });
 
   return { transaction, balance };
+}
+
+// Una transferencia toca dos wallets distintas (emisor y receptor) — a diferencia de deposit/
+// withdrawal/swap/buy/cashback, que solo tocan una. Cada wallet tiene su propia fila en
+// `transactions` (mismo criterio de partida doble que el resto del ledger: cada movimiento de
+// balance es una fila), las dos con `transaction_type: 'TRANSFER'`, creadas en la misma
+// transacción de Postgres para que sea atómico: o se debita al emisor y se acredita al receptor
+// los dos, o no pasa ninguno de los dos.
+export async function recordTransfer(
+  client: PoolClient,
+  senderWalletId: string,
+  recipientWalletId: string,
+  currency: string,
+  amount: string,
+): Promise<TransferLedgerResult> {
+  const senderBalance = await withdrawBalance(client, senderWalletId, currency, amount);
+  if (!senderBalance) {
+    throw new InsufficientFundsError(`Insufficient ${currency} balance`);
+  }
+
+  await depositBalance(client, recipientWalletId, currency, amount);
+
+  const senderTransaction = await createTransaction(client, {
+    walletId: senderWalletId,
+    transactionType: 'TRANSFER',
+    fromCurrency: currency,
+    amountSent: amount,
+    status: 'COMPLETED',
+  });
+
+  const recipientTransaction = await createTransaction(client, {
+    walletId: recipientWalletId,
+    transactionType: 'TRANSFER',
+    toCurrency: currency,
+    amountReceived: amount,
+    status: 'COMPLETED',
+  });
+
+  return { senderTransaction, senderBalance, recipientTransaction };
 }
 
 export async function recordCashback(
