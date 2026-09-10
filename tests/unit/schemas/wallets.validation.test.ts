@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { depositWithdrawSchema } from '../../../src/modules/wallets/wallets.validation';
+import { depositWithdrawSchema, transferSchema } from '../../../src/modules/wallets/wallets.validation';
 
 describe('depositWithdrawSchema', () => {
   it('accepts a valid amount', () => {
@@ -35,6 +35,44 @@ describe('depositWithdrawSchema', () => {
   it('rejects an amount with more than 16 integer digits (would overflow the DB column)', () => {
     const amount = '9'.repeat(17);
     const result = depositWithdrawSchema.safeParse({ currency: 'USD', amount });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('transferSchema', () => {
+  it('accepts a valid transfer payload', () => {
+    const result = transferSchema.safeParse({
+      recipientEmail: 'friend@example.com',
+      currency: 'USD',
+      amount: '10.00',
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects a malformed recipient email', () => {
+    const result = transferSchema.safeParse({
+      recipientEmail: 'not-an-email',
+      currency: 'USD',
+      amount: '10.00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects an unsupported currency', () => {
+    const result = transferSchema.safeParse({
+      recipientEmail: 'friend@example.com',
+      currency: 'XYZ',
+      amount: '10.00',
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejects a non-positive amount', () => {
+    const result = transferSchema.safeParse({
+      recipientEmail: 'friend@example.com',
+      currency: 'USD',
+      amount: '0.00',
+    });
     expect(result.success).toBe(false);
   });
 });

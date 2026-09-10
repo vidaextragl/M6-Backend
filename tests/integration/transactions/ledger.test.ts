@@ -8,6 +8,7 @@ import {
   recordCashback,
   recordDeposit,
   recordSwap,
+  recordTransfer,
   recordWithdrawal,
 } from '../../../src/modules/transactions/transactions.ledger';
 import { findWalletByUserId } from '../../../src/modules/wallets/wallets.repository';
@@ -119,5 +120,35 @@ describe('transactions ledger (double-entry bookkeeping)', () => {
 
     expect(transaction.transaction_type).toBe('REWARD_CASHBACK');
     expect(balance.amount).toBe('5.00');
+  });
+
+  it('recordTransfer debits the sender and credits the recipient atomically', async () => {
+    const senderWalletId = await createWalletForTest();
+    const recipientWalletId = await createWalletForTest();
+    await withTransaction((client) => recordDeposit(client, senderWalletId, 'USD', '100.00'));
+
+    const { senderTransaction, senderBalance, recipientTransaction } = await withTransaction(
+      (client) => recordTransfer(client, senderWalletId, recipientWalletId, 'USD', '40.00'),
+    );
+
+    expect(senderTransaction.transaction_type).toBe('TRANSFER');
+    expect(senderTransaction.amount_sent).toBe('40.00');
+    expect(senderBalance.amount).toBe('60.00');
+
+    expect(recipientTransaction.transaction_type).toBe('TRANSFER');
+    expect(recipientTransaction.amount_received).toBe('40.00');
+    expect(await getBalance(recipientWalletId, 'USD')).toBe('40.00');
+  });
+
+  it('recordTransfer throws InsufficientFundsError and leaves both balances untouched', async () => {
+    const senderWalletId = await createWalletForTest();
+    const recipientWalletId = await createWalletForTest();
+
+    await expect(
+      withTransaction((client) => recordTransfer(client, senderWalletId, recipientWalletId, 'USD', '10.00')),
+    ).rejects.toThrow(InsufficientFundsError);
+
+    expect(await getBalance(senderWalletId, 'USD')).toBe('0.00');
+    expect(await getBalance(recipientWalletId, 'USD')).toBe('0.00');
   });
 });
